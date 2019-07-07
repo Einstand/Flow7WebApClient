@@ -1,0 +1,119 @@
+﻿<html>
+<head>
+  <meta charset="utf-8">
+  <title>CClient-Index</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="NewAuth3ty.js"></script>
+  <script src="UglyTableBuilder.js"></script>
+</head>
+
+<body>
+
+<b>進行中的表單</b>
+<table id="ActiveRequisitionDIV" border=1></table>
+
+<br>
+
+<b>已發佈的表單</b>
+<table id="DiagramListDIV" border=1></table>
+<br>
+<a href='ccIndex.htm'>index</a>&nbsp;|&nbsp;
+<a href='ccLogin.htm'>login</a>
+
+<script>
+function DiagramSuccess(result)
+{
+  var newAu30API=window.NewAu30API;
+  console.log("DiagramList Success ");
+  if ($.isArray(result))
+  {
+    if (result.length>0)
+    {
+      var option={};
+      option.Identify={};
+      option.Identify.url="ccApplicantSubmit.htm";
+      option.Identify.parameter=[];
+      option.Identify.parameter[0]={ key : "DiagramID", field : "DiagramID" };
+      option.Project={ hidden:true };
+      option.DiagramID={ hidden:true };
+      option.Version={ hidden:true };
+      buildHtmlTable(result,'#DiagramListDIV',option);
+    }
+    else
+    {
+      $('#DiagramListDIV').html("None");
+    }
+  }
+  else
+  {
+     if ($.isPlainObject(result))
+     {
+        $('#DiagramListDIV').html(JSON.stringify(result));
+     }
+     else
+     {
+        $('#DiagramListDIV').html(result);
+     }
+  }
+}
+
+function ActiveRequisitionSuccess(result)
+{
+  var newAu30API=window.NewAu30API;
+  console.log("ActiveRequisition Success");
+  if ($.isArray(result))
+  {
+    if (result.length>0)
+    {
+      var option={};
+      option.RequisitionID={};
+      option.RequisitionID.url="ccNextApprover.htm";
+      option.RequisitionID.parameter=[];
+      option.RequisitionID.parameter[0]={ key : "RequisitionID", field : "RequisitionID" };
+      buildHtmlTable(result,'#ActiveRequisitionDIV',option);
+    }
+    else
+    {
+      $('#ActiveRequisitionDIV').html("None");
+    }
+  }
+  else
+  {
+     if ($.isPlainObject(result))
+     {
+        $('#ActiveRequisitionDIV').html(JSON.stringify(result));
+     }
+     else
+     {
+        $('#ActiveRequisitionDIV').html(result);
+     }
+  }
+}
+
+$(document).ready(function () {
+  var newAu30API=window.NewAu30API;
+  var authToken=newAu30API.cookie['Flow7Token'];
+  
+  var sDiagramUrl="JsonFetch.aspx?JsonConfig=PublicDiagramList&AuthToken="+authToken;
+  $.ajax(
+  {
+    url: sDiagramUrl, 
+    success: function(result)
+    { 
+      DiagramSuccess(result);
+    }
+  });
+  var sActiveRequisitionUrl="JsonFetch.aspx?JsonConfig=PublicActiveRequisition&AuthToken="+authToken;
+  $.ajax(
+  {
+    url: sActiveRequisitionUrl, 
+    success: function(result)
+    { 
+      ActiveRequisitionSuccess(result);
+    }
+  });
+});
+ </script>
+ 
+</body>
+</html>

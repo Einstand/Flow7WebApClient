@@ -1,0 +1,279 @@
+﻿<html>
+<head>
+  <meta charset="utf-8">
+  <title>CC-TwoSpecMemByStart_ApplicantSubmit</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="NewAuth3ty.js"></script>
+  <script src="Flow7WebAPI.js"></script>
+</head>
+
+<body LastUpdate="2019-06-05">
+<table border=0>
+  <tr>
+    <td nowrap>ApplicantID</td>
+    <td ><input id="ApplicantID" type="text" maxlength=80 size=20 value="Elle"></td>
+  </tr>
+  <tr>
+    <td nowrap>ApplicantDept</td>
+    <td ><input id="ApplicantDept" type="text" maxlength=80 size=20 value="PackageEngDiv"></td>
+  </tr>
+  <tr>
+    <td nowrap>Member1st</td>
+    <td ><input id="Member1st" type="text" maxlength=80 size=20 value="Sonia"></td>
+  </tr>
+  <tr>
+    <td nowrap>Member2nd</td>
+    <td ><input id="Member2nd" type="text" maxlength=80 size=20 value="Ajen"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="SubmitByAjaxBtn">Submit(Ajax)</button>
+      &nbsp;
+      <button id="SubmitByRedirBtn">Submit(Redirect)</button>
+    </td>
+  </tr>
+  
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekStartAllByAjaxBtn">PeekStartAll(Ajax)</button>
+      &nbsp;
+      <button id="PeekStartAllByRedirBtn">PeekStartAll(Redirect)</button>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekStartOneByAjaxBtn">PeekStartOne(Ajax)</button>
+    </td>
+  </tr>
+  
+  
+  
+</table>
+<br>
+<table border=1 cellpadding=4>
+  <tr>
+    <td>Submit(Ajax)</td>
+    <td>使用 jQuery 的 ajax 功能將參數傳給 Flow7ApClient.aspx</td>
+  </tr>
+  <tr>
+    <td>Submit(Redirect)</td>
+    <td>轉頁給 CallStart.aspx 再由 CallStart.aspx 使用 HttpWebRequest 呼叫 Flow7ApClient.aspx</td>
+  </tr>
+</table>
+<br>
+<div id='imagediv'></div>
+<br>
+<table id="RequestTBL" border=1 width="100%"></table>
+<br>
+<a href='ccIndex.htm'>ccIndex</a>
+<script>
+
+function StartSuccess(result)
+{
+   alert(JSON.stringify(result.flow7data));
+   var newAu30API=window.NewAu30API;
+   window.location = "ccIndex.htm";
+}
+
+function PeekStartSuccess(result)
+{
+   alert(JSON.stringify(result));
+}
+
+function StartByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept,sMember1st,sMember2nd)
+{
+   window.location.href = "TwoSpecMemByStart_CallStart.aspx?authToken="+authToken+"&diagramGuid="+sDiagramID+"&applicantID="+sApplicantID+"&applicantDept="+sApplicantDept+"&member1st="+sMember1st+"&member2nd="+sMember2nd;
+}
+
+function PeekStartAllByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept,sMember1st,sMember2nd)
+{
+   window.location.href = "TwoSpecMemByStart_PeekStartAll.aspx?authToken="+authToken+"&diagramGuid="+sDiagramID+"&applicantID="+sApplicantID+"&applicantDept="+sApplicantDept+"&member1st="+sMember1st+"&member2nd="+sMember2nd;
+}
+
+function PostCommand(dataObj,successFunc,failFunc,errorFunc,unauthorizedFunc)
+{
+    var sUrl="Flow7ApClient.aspx";
+    $.ajax(
+    {
+        type: "POST",
+        contentType : "application/json",
+        url: sUrl,
+        data: JSON.stringify(dataObj),
+        dataType: "json",
+        success: function(result)
+        {
+            console.log(result);
+            if (typeof(result)=='object')//正確時傳回 json
+            {
+                if (result.flow7data) //包含 "flow7data" 這個 Object
+                {
+                    if (result.flow7data.ok===true)
+                    {
+                        
+                        if (successFunc)
+                        {
+                            //alert(JSON.stringify(result.flow7data));
+                            successFunc(result);
+                        }
+                        else
+                        {
+                           alert(JSON.stringify(result.flow7data));
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if (result.flow7data.is_valid===false)
+                        {
+                            if (unauthorizedFunc)
+                            {
+                                unauthorizedFunc(result.flow7data);
+                            }
+                            else
+                            {
+                                alert(JSON.stringify(result.flow7data));
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            if (failFunc)
+            {
+                failFunc(result);
+            }
+            else
+            {
+                alert("fail ->\r\n"+JSON.stringify(result));
+            }
+        },
+        error: function(xhr, ajaxOptions, thrownError)
+        {
+            if (errorFunc)
+            {
+               errorFunc(xhr)
+            }
+            else
+            {
+               alert("error : " + xhr.status + " " + xhr.statusText+" , "+thrownError);
+            }
+        }
+    });
+}
+
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+$(document).ready(function () {
+  var flow7API=window.Flow7API;
+  var newAu30API=window.NewAu30API;
+  var sDiagramID=newAu30API.request['DiagramID'];
+  
+  newAu30API.dumpRequestTable("#RequestTBL");
+  
+  var img = $('<img id="DiagramPng">');
+  img.attr('src', "FileFetch.aspx?FileConfig=FetchDiagramPng&DiagramID="+sDiagramID);
+  img.appendTo('#imagediv');
+  
+  $("#SubmitByAjaxBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    var sMember1st=$("#Member1st").val();
+    var sMember2nd=$("#Member2nd").val();
+    
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]="start";
+    data["authToken"]=authToken;
+    data["applicantId"]=sApplicantID;
+    data["applicantDept"]=sApplicantDept;
+    data["options"]={};
+    data["options"]["diagramGuid"]=sDiagramID;
+    data["options"]["requisitionId"]=guid();
+    var masterData={};
+    masterData["Member1st"]=sMember1st;
+    masterData["Member2nd"]=sMember2nd;
+    data["masterData"]=masterData;
+    PostCommand(data,StartSuccess);
+    return false;
+  });
+  
+  $("#PeekStartAllByAjaxBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    var sMember1st=$("#Member1st").val();
+    var sMember2nd=$("#Member2nd").val();
+    
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]="peekStartAll";
+    data["authToken"]=authToken;
+    data["applicantId"]=sApplicantID;
+    data["applicantDept"]=sApplicantDept;
+    data["options"]={};
+    data["options"]["diagramGuid"]=sDiagramID;
+    var masterData={};
+    masterData["Member1st"]=sMember1st;
+    masterData["Member2nd"]=sMember2nd;
+    data["masterData"]=masterData;
+    PostCommand(data,PeekStartSuccess);
+    return false;
+  });
+  
+  $("#PeekStartOneByAjaxBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    var sMember1st=$("#Member1st").val();
+    var sMember2nd=$("#Member2nd").val();
+    
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]="peekStartOne";
+    data["authToken"]=authToken;
+    data["applicantId"]=sApplicantID;
+    data["applicantDept"]=sApplicantDept;
+    data["options"]={};
+    data["options"]["diagramGuid"]=sDiagramID;
+    var masterData={};
+    masterData["Member1st"]=sMember1st;
+    masterData["Member2nd"]=sMember2nd;
+    data["masterData"]=masterData;
+    PostCommand(data,PeekStartSuccess);
+    return false;
+  });
+  
+  $("#SubmitByRedirBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    var sMember1st=$("#Member1st").val();
+    var sMember2nd=$("#Member2nd").val();
+    StartByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept,sMember1st,sMember2nd);
+    return false;
+  });
+  
+  $("#PeekStartAllByRedirBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    var sMember1st=$("#Member1st").val();
+    var sMember2nd=$("#Member2nd").val();
+    PeekStartAllByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept,sMember1st,sMember2nd);
+    return false;
+  });
+});
+</script>
+</body>
+</html>

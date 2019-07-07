@@ -1,0 +1,66 @@
+﻿<html>
+<head>
+  <meta charset="utf-8">
+  <title>CC-NextApprover</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="NewAuth3ty.js"></script>
+  <script src="UglyTableBuilder.js"></script>
+</head>
+
+<body>
+<b>待簽核人列表</b>
+<table id="NextApproverDIV" border=1></table>
+<br>
+<b>Return JSON</b><br>
+<code id="NextApproverJSON"></code>
+<hr>
+<a href='ccIndex.htm'>ccIndex</a>
+
+<script>
+function NextApproverListSuccess(result)
+{
+  var newAu30API=window.NewAu30API;
+  console.log("NextApprover Success ");
+  if ($.isArray(result))
+  {
+    if (result.length>0)
+    {
+      $('#NextApproverJSON').html(JSON.stringify(result));
+      var option={};
+      option.ApproverGuid={};
+      option.ApproverGuid.url="ccApproverSubmit.htm";
+      option.ApproverGuid.parameter=[];
+      option.ApproverGuid.parameter[0]={ key : "RequisitionID", field : "RequisitionID" };
+      option.ApproverGuid.parameter[1]={ key : "ApproverGuid", field : "ApproverGuid" };
+      option.RequisitionID={ hidden:true };
+      option.DiagramID={ hidden:true };
+      buildHtmlTable(result,'#NextApproverDIV',option);
+    }
+    else
+    {
+      $('#NextApproverDIV').html("None");
+    }
+  }
+  else
+  {
+    $('#NextApproverDIV').html(result);
+  }
+}
+
+$(document).ready(function () {
+  var newAu30API=window.NewAu30API;
+  console.log(newAu30API.request);
+  var authToken=newAu30API.cookie['Flow7Token'];
+  var sNextApproverListUrl="JsonFetch.aspx?JsonConfig=PublicNextApproverList&RequisitionID="+newAu30API.request['RequisitionID']+"&AuthToken="+authToken;
+  $.ajax(
+  {
+    url: sNextApproverListUrl, 
+    success: function(result)
+    { 
+      NextApproverListSuccess(result);
+    }
+  });
+});
+ </script>
+</body>
+</html>

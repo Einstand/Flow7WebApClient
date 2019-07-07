@@ -1,0 +1,362 @@
+﻿<html>
+<head>
+  <meta charset="utf-8">
+  <title>CC-TwoSpecMemByStart_ApproverSubmit</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="NewAuth3ty.js"></script>
+  <script src="Flow7WebAPI.js"></script>
+  <script src="UglyTableBuilder.js"></script>
+</head>
+
+<body LastUpdate="2019-06-10">
+<div style="font: 90% verdana,arial,helvetica,sans-serif;padding: 8px 8px 8px 8px;margin: 0px 12px 0px 12px;text-align: right;color: lightgray;">2018/07/15</div>
+<table border=0>
+  <tr>
+    <td nowrap>ProcessID</td>
+    <td>
+      <span id="ProcessID"></span>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap>ApproverID</td>
+    <td>
+      <span id="ApproverID"></span>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap>ApproverDept</td>
+    <td>
+      <span id="ApproverDept"></span>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap>Member2nd</td>
+    <td >
+      <input id="Member2nd" type="text" maxlength=80 size=20 value="Kelly">
+      <a href="#" onclick='javascript:$("#Member2nd").val("Kelly")'>Kelly</a>&nbsp;|&nbsp;
+      <a href="#" onclick='javascript:$("#Member2nd").val("Bingyan")'>Bingyan</a>&nbsp;|&nbsp;
+      <a href="#" onclick='javascript:$("#Member2nd").val("Monica")'>Monica</a>
+    </td>
+  </tr>
+  <tr>
+    <td nowrap>Comment</td>
+    <td>
+      <textarea id="Comment" cols=40 rows=2>
+</textarea>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td align="center">
+      <button id="agreeBtn1">Agree(Ajax)</button>&nbsp;
+      <button id="disagreeBtn1">Disagree(Ajax)</button><br>
+      <button id="agreeBtn2">Agree(Redirect)</button>&nbsp;
+      <button id="disagreeBtn2">Disagree(Redirect)</button>
+      <hr>
+      <button id="withDrawBtn1">Withdraw(Ajax)</button>&nbsp;
+      <button id="withDrawBtn2">Withdraw(Redirect)</button><br>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekNextAllBtn1">PeekNextAll(Ajax)</button>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekNextOneBtn1">PeekNextOne(Ajax)</button>
+    </td>
+  </tr>
+</table>
+<hr>
+<b>簽核記錄</b>
+<table id="LogListTBL" border=1 width="100%"></table>
+<br>
+<div id='imagediv'></div>
+<br>
+<table id="RequestTBL" border=1 width="100%"></table>
+<br>
+<table id="CookieTBL" border=1 width="100%"></table>
+<br>
+<a href='ccIndex.htm'>ccIndex</a> | <a href='ccLogin.htm'>ccLogin</a>
+<script>
+
+function ApprovalLogSuccess(result)
+{
+  var newAu30API=window.NewAu30API;
+  console.log("LogList Success ");
+  if (typeof(result)=='object')
+  {
+    buildHtmlTable(result,'#LogListTBL');
+  }
+  else
+  {
+    $('#LogListTBL').html(result);
+  }
+}
+
+function NextApproverInfoSuccess(result)
+{
+  var newAu30API=window.NewAu30API;
+  console.log("NextApprover Success ");
+  if (typeof(result)=='object')
+  {
+    if (result.length>0)
+    {
+      ApproverInfo=result[0];
+      $('#ProcessID').html(ApproverInfo.ProcessByScript);
+      $('#ApproverID').html(ApproverInfo.ScriptApproverID);
+      $('#ApproverDept').html(ApproverInfo.ApproverDept);
+      var authToken=newAu30API.cookie['Flow7Token'];
+      var img = $('<img id="ProcessPng">');
+      img.attr('src', "FileFetch.aspx?FileConfig=FetchProcessPng&DiagramID="+ApproverInfo.DiagramID+"&ProcessID="+ApproverInfo.ProcessID+"&AuthToken="+authToken);
+      img.appendTo('#imagediv');
+      
+      var sApprovalLogUrl="JsonFetch.aspx?JsonConfig=PublicApprovalLogList&RequisitionID="+newAu30API.request['RequisitionID']+"&DiagramID="+ApproverInfo.DiagramID+"&AuthToken="+authToken;
+      $.ajax(
+      {
+        url: sApprovalLogUrl, 
+        success: function(result)
+        { 
+          ApprovalLogSuccess(result);
+        }
+      });
+    }
+    else
+    {
+      $('#ProcessID').html("not found");
+      $('#ApproverID').html("not found");
+      $('#ApproverDept').html("not found");
+    }
+  }
+  else
+  {
+  }
+}
+
+function AgreeSuccess(result)
+{
+   var newAu30API=window.NewAu30API;
+   window.location = "ccNextApprover.htm?RequisitionID="+newAu30API.request['RequisitionID'];
+}
+
+function DisagreeSuccess(result)
+{
+   var newAu30API=window.NewAu30API;
+   window.location = "ccNextApprover.htm?RequisitionID="+newAu30API.request['RequisitionID'];
+}
+
+function WithdrawSuccess(result)
+{
+   var newAu30API=window.NewAu30API;
+   window.location = "ccIndex.htm";
+}
+
+function PostCommand(dataObj,successFunc,failFunc,errorFunc,unauthorizedFunc)
+{
+    var sUrl="Flow7ApClient.aspx";
+    $.ajax(
+    {
+        type: "POST",
+        contentType: "application/json",
+        url: sUrl,
+        data: JSON.stringify(dataObj),
+        dataType: "json",
+        success: function(result)
+        {
+            console.log(result);
+            if (typeof(result)=='object')//正確時傳回 json
+            {
+                if (result.flow7data) //包含 "flow7data" 這個 Object
+                {
+                    if (result.flow7data.ok===true)
+                    {
+                        if (successFunc)
+                        {
+                            alert(JSON.stringify(result.flow7data));
+                            successFunc(result);
+                        }
+                        else
+                        {
+                            alert(JSON.stringify(result.flow7data));
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        if (result.flow7data.is_valid===false)
+                        {
+                            if (unauthorizedFunc)
+                            {
+                                unauthorizedFunc(result.flow7data);
+                            }
+                            else
+                            {
+                                alert(JSON.stringify(result.flow7data));
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            if (failFunc)
+            {
+                failFunc(result);
+            }
+            else
+            {
+                alert("fail ->\r\n"+JSON.stringify(result));
+            }
+        },
+        error: function(xhr)
+        {
+            if (errorFunc)
+            {
+               errorFunc(xhr)
+            }
+            else
+            {
+               alert("error : " + xhr.status + " " + xhr.statusText);
+            }
+        }
+    });
+}
+
+function AgreeOrNotByAjax(yesNo,authToken,approverGuid,options,successFunc,failFunc,errorFunc)
+{
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]=yesNo ? "agree" : "disagree";
+    data["authToken"]=authToken;
+    data["approverGuid"]=approverGuid;
+    if ($.isPlainObject(options))
+    {
+        data["options"]=options;
+    }
+    PostCommand(data,successFunc,failFunc,errorFunc);
+}
+
+function WithDrawByAjax(authToken,requisitionId,options,successFunc,failFunc,errorFunc)
+{
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]="withdrawRequisition";
+    data["authToken"]=authToken;
+    data["requisitionId"]=requisitionId;
+    if ($.isPlainObject(options))
+    {
+        data["options"]=options;
+    }
+    PostCommand(data,successFunc,failFunc,errorFunc);
+}
+
+function PeekNextByAjax(command,authToken,approverGuid,options,masterData,successFunc,failFunc,errorFunc)
+{
+    var data = {};
+    data["client_id"]="WebEIP";
+    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
+    data["command"]=command;
+    data["authToken"]=authToken;
+    data["approverGuid"]=approverGuid;
+    if ($.isPlainObject(options))
+    {
+        data["options"]=options;
+    }
+    if ($.isPlainObject(masterData))
+    {
+        data["masterData"]=masterData;
+    }
+    PostCommand(data,successFunc,failFunc,errorFunc);
+}
+
+function AgreeByRedirect(authToken,sApproverGuid)
+{
+   window.location.href = "CallAgree.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
+}
+
+function DisagreeByRedirect(authToken,sApproverGuid)
+{
+   window.location.href = "CallDisagree.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
+}
+
+function WithdrawByRedirect(authToken,sRequisitionID)
+{
+   window.location.href = "CallWithdraw.aspx?authToken="+authToken+"&requisitionId="+sRequisitionID;
+}
+
+$(document).ready(function () {
+  var newAu30API=window.NewAu30API;
+  var sApproverGuid=newAu30API.request['ApproverGuid'];
+  var sRequisitionID=newAu30API.request['RequisitionID'];
+  
+  newAu30API.dumpRequestTable("#RequestTBL");
+  newAu30API.dumpCookieTable("#CookieTBL");
+  
+  $("#agreeBtn1").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sComment=$("textarea#Comment").val();
+    AgreeOrNotByAjax(true,authToken,sApproverGuid, { comment : sComment },AgreeSuccess );
+  });
+  
+  $("#disagreeBtn1").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sComment=$("textarea#Comment").val();
+    AgreeOrNotByAjax(false,authToken,sApproverGuid, { comment : sComment },DisagreeSuccess );
+  });
+  
+  $("#agreeBtn2").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    AgreeByRedirect(authToken,sApproverGuid);
+  });
+  
+  $("#disagreeBtn2").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sComment=$("textarea#Comment").val();
+    DisagreeByRedirect(authToken,sApproverGuid);
+  });
+  
+  $("#withDrawBtn1").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    WithDrawByAjax(authToken,sRequisitionID, {},WithdrawSuccess );
+  });
+  
+  $("#withDrawBtn2").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    WithdrawByRedirect(authToken,sRequisitionID);
+  });
+  
+  $("#PeekNextAllBtn1").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sComment=$("textarea#Comment").val();
+    var sMember2nd=$("#Member2nd").val();
+    var masterData={};
+    masterData["Member2nd"]=sMember2nd;
+    PeekNextByAjax("peekNextAll",authToken,sApproverGuid,{ comment : sComment },masterData);
+  });
+  
+  $("#PeekNextOneBtn1").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sComment=$("textarea#Comment").val();
+    var sMember2nd=$("#Member2nd").val();
+    var masterData={};
+    masterData["Member2nd"]=sMember2nd;
+    PeekNextByAjax("peekNextOne",authToken,sApproverGuid,{ comment : sComment },masterData);
+  });
+
+  var authToken=newAu30API.cookie['Flow7Token'];
+  var sNextApproverInfoUrl="JsonFetch.aspx?JsonConfig=PublicNextApproverInfo&ApproverGuid="+sApproverGuid+"&AuthToken="+authToken;
+  $.ajax(
+  {
+    url: sNextApproverInfoUrl, 
+    success: function(result)
+    { 
+      NextApproverInfoSuccess(result);
+    }
+  });
+  
+});
+</script>
+</body>
+</html>

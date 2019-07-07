@@ -1,0 +1,45 @@
+﻿<html>
+<head>
+   <meta charset="utf-8">
+   <title>CClient-Login</title>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+<body>
+<table cellpadding="3" cellspacing="3">
+   <tr>
+      <td>AccountID :</td>
+      <td>
+         <input id="account" name="account" type="text" value="Elle">
+         <a href="#" onclick='javascript:$("#account").val("Elle")'>Elle</a>&nbsp;|&nbsp;
+         <a href="#" onclick='javascript:$("#account").val("Sonia")'>Sonia</a>&nbsp;|&nbsp;
+         <a href="#" onclick='javascript:$("#account").val("Ajen")'>Ajen</a>
+      </td>
+   </tr>
+   <tr>
+      <td>Password :</td>
+      <td><i>Credential Client 不需要密碼</i></td>
+   </tr>
+   <tr>
+      <td colspan="2" align="center">
+         <button id="loginBtn">Login</button>
+      </td>
+   </tr>
+</table>
+<br>
+<a href='ccIndex.htm'>ccIndex</a>
+<script>
+   $(document).ready(function () {
+   
+   var accountEdit= document.getElementById('account');
+   
+   $("#loginBtn").click(function(e) {
+     e.preventDefault(); // 不加這行的話, form 就直接送出去了
+     window.location.href = "CallLogin.aspx?accountId="+accountEdit.value;
+     return false;
+   });
+   
+   });
+</script>
+</body>
+</html>
+

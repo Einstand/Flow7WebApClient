@@ -1,0 +1,108 @@
+﻿<html>
+<head>
+  <meta charset="utf-8">
+  <title>CC-ApplicantSubmit</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="NewAuth3ty.js"></script>
+  <script src="Flow7WebAPI.js"></script>
+</head>
+
+<body LastUpdate="2018-07-16">
+<table border=0>
+  <tr>
+    <td nowrap>ApplicantID</td>
+    <td ><input id="ApplicantID" type="text" maxlength=80 size=20 value="Elle"></td>
+  </tr>
+  <tr>
+    <td nowrap>ApplicantDept</td>
+    <td ><input id="ApplicantDept" type="text" maxlength=80 size=20 value="PackageEngDiv"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="SubmitByRedirBtn">Submit</button>
+    </td>
+  </tr>
+  
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekAllByRedirBtn">PeekStartAll</button>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <button id="PeekOneByRedirBtn">PeekStartOne</button>
+    </td>
+  </tr>
+</table>
+
+<br>
+<div id='imagediv'></div>
+<br>
+<table id="RequestTBL" border=1 width="100%"></table>
+<br>
+<a href='ccIndex.htm'>ccIndex</a>
+
+<script>
+
+function StartByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept)
+{
+   window.location.href = "CallStart.aspx?authToken="+authToken+"&diagramGuid="+sDiagramID+"&applicantID="+sApplicantID+"&applicantDept="+sApplicantDept;
+}
+
+function PeekAllByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept)
+{
+   window.location.href = "CallPeekStartAll.aspx?authToken="+authToken+"&diagramGuid="+sDiagramID+"&applicantID="+sApplicantID+"&applicantDept="+sApplicantDept;
+}
+
+function PeekOneByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept)
+{
+   window.location.href = "CallPeekStartOne.aspx?authToken="+authToken+"&diagramGuid="+sDiagramID+"&applicantID="+sApplicantID+"&applicantDept="+sApplicantDept;
+}
+
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+}
+
+$(document).ready(function () {
+  var flow7API=window.Flow7API;
+  var newAu30API=window.NewAu30API;
+  var sDiagramID=newAu30API.request['DiagramID'];
+  
+  newAu30API.dumpRequestTable("#RequestTBL");
+  
+  var img = $('<img id="DiagramPng">');
+  img.attr('src', "FileFetch.aspx?FileConfig=FetchDiagramPng&DiagramID="+sDiagramID);
+  img.appendTo('#imagediv');
+  
+  $("#SubmitByRedirBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    StartByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept);
+    return false;
+  });
+  
+  $("#PeekAllByRedirBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    PeekAllByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept);
+    return false;
+  });
+  
+  $("#PeekOneByRedirBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    var sApplicantID=$("#ApplicantID").val();
+    var sApplicantDept=$("#ApplicantDept").val();
+    PeekOneByRedirect(authToken,sDiagramID,sApplicantID,sApplicantDept);
+    return false;
+  });
+});
+</script>
+</body>
+</html>
