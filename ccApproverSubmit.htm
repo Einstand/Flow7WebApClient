@@ -8,7 +8,7 @@
   <script src="UglyTableBuilder.js"></script>
 </head>
 
-<body LastUpdate="2019-06-10">
+<body LastUpdate="2019-07-08">
 <div style="font: 90% verdana,arial,helvetica,sans-serif;padding: 8px 8px 8px 8px;margin: 0px 12px 0px 12px;text-align: right;color: lightgray;">2018/07/15</div>
 <table border=0>
   <tr>
@@ -39,23 +39,39 @@
   <tr>
     <td></td>
     <td align="center">
-      <button id="agreeBtn1">Agree(Ajax)</button>&nbsp;
-      <button id="disagreeBtn1">Disagree(Ajax)</button><br>
-      <button id="agreeBtn2">Agree(Redirect)</button>&nbsp;
-      <button id="disagreeBtn2">Disagree(Redirect)</button>
+      <button id="agreeBtn">Agree (同意)</button>&nbsp;
+      <button id="disagreeBtn">Disagree (不同意)</button>
       <hr>
-      <button id="withDrawBtn1">Withdraw(Ajax)</button>&nbsp;
-      <button id="withDrawBtn2">Withdraw(Redirect)</button><br>
+      <button id="withDrawBtn">Withdraw (申請人撤單)</button><br>
+      <button id="peekNextOneBtn">PeekNextOne (偷看下一位簽核人)</button><br>
+      <button id="peekNextAllBtn">PeekNextAll (偷看未來所有可能的簽核人)</button>
+      <hr>
     </td>
   </tr>
   <tr>
-    <td colspan="2" align="center">
-      <button id="PeekNextAllBtn1">PeekNextAll(Ajax)</button>
+    <td>&nbsp;</td>
+    <td align="center">
+      <table>
+        <tr>
+          <td>newApproverId</td>
+          <td ><input id="newApproverId" type="text" maxlength=80 size=20 value="Yuli"></td>
+        </tr>
+        <tr>
+          <td>newApproverDept</td>
+          <td ><input id="newApproverDept" type="text" maxlength=80 size=20 value="SalesDept3"></td>
+        </tr>
+        <tr>
+          <td colspan=2 align="center">
+            <button id="queryOpinionBtn">QueryOpinion (徵詢意見)</button><br>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
   <tr>
-    <td colspan="2" align="center">
-      <button id="PeekNextOneBtn1">PeekNextOne(Ajax)</button>
+    <td></td>
+    <td align="center">
+      
     </td>
   </tr>
 </table>
@@ -125,143 +141,6 @@ function NextApproverInfoSuccess(result)
   }
 }
 
-function AgreeSuccess(result)
-{
-   var newAu30API=window.NewAu30API;
-   window.location = "ccNextApprover.htm?RequisitionID="+newAu30API.request['RequisitionID'];
-}
-
-function DisagreeSuccess(result)
-{
-   var newAu30API=window.NewAu30API;
-   window.location = "ccNextApprover.htm?RequisitionID="+newAu30API.request['RequisitionID'];
-}
-
-function WithdrawSuccess(result)
-{
-   var newAu30API=window.NewAu30API;
-   window.location = "ccIndex.htm";
-}
-
-function PostCommand(dataObj,successFunc,failFunc,errorFunc,unauthorizedFunc)
-{
-    var sUrl="Flow7ApClient.aspx";
-    $.ajax(
-    {
-        type: "POST",
-        contentType: "application/json",
-        url: sUrl,
-        data: JSON.stringify(dataObj),
-        dataType: "json",
-        success: function(result)
-        {
-            console.log(result);
-            if (typeof(result)=='object')//正確時傳回 json
-            {
-                if (result.flow7data) //包含 "flow7data" 這個 Object
-                {
-                    if (result.flow7data.ok===true)
-                    {
-                        if (successFunc)
-                        {
-                            alert(JSON.stringify(result.flow7data));
-                            successFunc(result);
-                        }
-                        else
-                        {
-                            alert(JSON.stringify(result.flow7data));
-                        }
-                        return;
-                    }
-                    else
-                    {
-                        if (result.flow7data.is_valid===false)
-                        {
-                            if (unauthorizedFunc)
-                            {
-                                unauthorizedFunc(result.flow7data);
-                            }
-                            else
-                            {
-                                alert(JSON.stringify(result.flow7data));
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-            if (failFunc)
-            {
-                failFunc(result);
-            }
-            else
-            {
-                alert("fail ->\r\n"+JSON.stringify(result));
-            }
-        },
-        error: function(xhr)
-        {
-            if (errorFunc)
-            {
-               errorFunc(xhr)
-            }
-            else
-            {
-               alert("error : " + xhr.status + " " + xhr.statusText);
-            }
-        }
-    });
-}
-
-function AgreeOrNotByAjax(yesNo,authToken,approverGuid,options,successFunc,failFunc,errorFunc)
-{
-    var data = {};
-    data["client_id"]="WebEIP";
-    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
-    data["command"]=yesNo ? "agree" : "disagree";
-    data["authToken"]=authToken;
-    data["approverGuid"]=approverGuid;
-    if ($.isPlainObject(options))
-    {
-        data["options"]=options;
-    }
-    PostCommand(data,successFunc,failFunc,errorFunc);
-}
-
-function WithDrawByAjax(authToken,requisitionId,options,successFunc,failFunc,errorFunc)
-{
-    var data = {};
-    data["client_id"]="WebEIP";
-    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
-    data["command"]="withdrawRequisition";
-    data["authToken"]=authToken;
-    data["requisitionId"]=requisitionId;
-    if ($.isPlainObject(options))
-    {
-        data["options"]=options;
-    }
-    PostCommand(data,successFunc,failFunc,errorFunc);
-}
-
-function PeekNextByAjax(command,authToken,approverGuid,options,masterData,successFunc,failFunc,errorFunc)
-{
-    var data = {};
-    data["client_id"]="WebEIP";
-    data["client_secret"]="newauth-1x087-a5gf3-a12et-webeip";
-    data["command"]=command;
-    data["authToken"]=authToken;
-    data["approverGuid"]=approverGuid;
-    if ($.isPlainObject(options))
-    {
-        data["options"]=options;
-    }
-    if ($.isPlainObject(masterData))
-    {
-        data["masterData"]=masterData;
-    }
-    PostCommand(data,successFunc,failFunc,errorFunc);
-}
-
 function AgreeByRedirect(authToken,sApproverGuid)
 {
    window.location.href = "CallAgree.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
@@ -272,9 +151,26 @@ function DisagreeByRedirect(authToken,sApproverGuid)
    window.location.href = "CallDisagree.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
 }
 
+function PeekNextOneByRedirect(authToken,sApproverGuid)
+{
+   window.location.href = "CallPeekNextOne.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
+}
+
+function PeekNextAllByRedirect(authToken,sApproverGuid)
+{
+   window.location.href = "CallPeekNextAll.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid;
+}
+
 function WithdrawByRedirect(authToken,sRequisitionID)
 {
    window.location.href = "CallWithdraw.aspx?authToken="+authToken+"&requisitionId="+sRequisitionID;
+}
+
+function QueryOpinionByRedirect(authToken,sApproverGuid)
+{
+   var newApproverId=$("#newApproverId").val();
+   var newApproverDept=$("#newApproverDept").val();
+   window.location.href = "CallQueryOpinion.aspx?authToken="+authToken+"&approverGuid="+sApproverGuid+"&newApproverId="+newApproverId+"&newApproverDept="+newApproverDept;
 }
 
 $(document).ready(function () {
@@ -285,51 +181,35 @@ $(document).ready(function () {
   newAu30API.dumpRequestTable("#RequestTBL");
   newAu30API.dumpCookieTable("#CookieTBL");
   
-  $("#agreeBtn1").click(function(e) {
-    var authToken=newAu30API.cookie['Flow7Token'];
-    var sComment=$("textarea#Comment").val();
-    AgreeOrNotByAjax(true,authToken,sApproverGuid, { comment : sComment },AgreeSuccess );
-  });
-  
-  $("#disagreeBtn1").click(function(e) {
-    var authToken=newAu30API.cookie['Flow7Token'];
-    var sComment=$("textarea#Comment").val();
-    AgreeOrNotByAjax(false,authToken,sApproverGuid, { comment : sComment },DisagreeSuccess );
-  });
-  
-  $("#agreeBtn2").click(function(e) {
+  $("#agreeBtn").click(function(e) {
     var authToken=newAu30API.cookie['Flow7Token'];
     AgreeByRedirect(authToken,sApproverGuid);
   });
   
-  $("#disagreeBtn2").click(function(e) {
+  $("#disagreeBtn").click(function(e) {
     var authToken=newAu30API.cookie['Flow7Token'];
     var sComment=$("textarea#Comment").val();
     DisagreeByRedirect(authToken,sApproverGuid);
   });
   
-  $("#withDrawBtn1").click(function(e) {
-    var authToken=newAu30API.cookie['Flow7Token'];
-    WithDrawByAjax(authToken,sRequisitionID, {},WithdrawSuccess );
-  });
-  
-  $("#withDrawBtn2").click(function(e) {
+  $("#withDrawBtn").click(function(e) {
     var authToken=newAu30API.cookie['Flow7Token'];
     WithdrawByRedirect(authToken,sRequisitionID);
   });
   
-  $("#PeekNextAllBtn1").click(function(e) {
+  $("#peekNextAllBtn").click(function(e) {
     var authToken=newAu30API.cookie['Flow7Token'];
-    var sComment=$("textarea#Comment").val();
-    var masterData={};
-    PeekNextByAjax("peekNextAll",authToken,sApproverGuid,{ comment : sComment },masterData);
+    PeekNextAllByRedirect(authToken,sApproverGuid);
   });
   
-  $("#PeekNextOneBtn1").click(function(e) {
+  $("#peekNextOneBtn").click(function(e) {
     var authToken=newAu30API.cookie['Flow7Token'];
-    var sComment=$("textarea#Comment").val();
-    var masterData={};
-    PeekNextByAjax("peekNextOne",authToken,sApproverGuid,{ comment : sComment },masterData);
+    PeekNextOneByRedirect(authToken,sApproverGuid);
+  });
+  
+  $("#queryOpinionBtn").click(function(e) {
+    var authToken=newAu30API.cookie['Flow7Token'];
+    QueryOpinionByRedirect(authToken,sApproverGuid);
   });
 
   var authToken=newAu30API.cookie['Flow7Token'];
